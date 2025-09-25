@@ -1,0 +1,118 @@
+.fun-facts-sticky {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 320px;
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.fun-facts-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.bulb-icon {
+  color: #ffc107;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 5px #ffc107); }
+  to { filter: drop-shadow(0 0 10px #ffc107); }
+}
+
+.fun-facts-header h4 {
+  color: #2d3748;
+  font-weight: 700;
+  flex: 1;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: rotate(180deg);
+}
+
+.fact-content {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.fact-emoji {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.1));
+}
+
+.fact-text {
+  color: #4a5568;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.quote-section {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.quote-section::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 3rem;
+  color: #667eea;
+  opacity: 0.3;
+  font-family: serif;
+}
+
+.quote-text {
+  font-size: 0.85rem;
+  color: #2d3748;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.progress-bar {
+  height: 3px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+}
+
+/* Mobile - Hide on small screens */
+@media (max-width: 1024px) {
+  .fun-facts-sticky {
+    display: none;
+  }
+}
