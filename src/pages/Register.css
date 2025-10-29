@@ -1,0 +1,501 @@
+/* ========================================
+   BACKGROUND & LAYOUT
+   ======================================== */
+.register-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff6ec 0%, #ffe1c2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  padding: 2rem 1rem;
+}
+
+/* ========================================
+   FLOATING PAWS ANIMATION
+   ======================================== */
+.paws-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.paws-bg .paw {
+  position: absolute;
+  font-size: 3rem;
+  opacity: 0.15;
+}
+
+.paw1 { top: 10%; left: 15%; }
+.paw2 { top: 40%; right: 10%; }
+.paw3 { bottom: 20%; left: 10%; }
+.paw4 { bottom: 10%; right: 20%; }
+.paw5 { top: 60%; left: 30%; }
+.paw6 { top: 25%; right: 35%; }
+
+/* ========================================
+   REGISTRATION CARD
+   ======================================== */
+.register-container {
+  position: relative;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 2rem;
+  padding: 2.5rem;
+  box-shadow: 0 20px 60px rgba(255, 138, 61, 0.2);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.register-container:hover {
+  box-shadow: 0 25px 70px rgba(255, 138, 61, 0.3);
+}
+
+/* ========================================
+   DECORATIVE PETS
+   ======================================== */
+.pet-deco {
+  position: absolute;
+  font-size: 3.5rem;
+  user-select: none;
+}
+
+.pet-deco.dog {
+  top: -20px;
+  right: -20px;
+}
+
+.pet-deco.cat {
+  bottom: -20px;
+  left: -20px;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.register-heading {
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  color: #ff884d;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.register-sub {
+  color: #6b6b6b;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+/* ========================================
+   FORM
+   ======================================== */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  text-align: left;
+}
+
+.form-group {
+  position: relative;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+  width: 100%;
+  padding: 1rem 3rem 1rem 1rem;
+  border-radius: 1rem;
+  border: 2px solid #ffd8b5;
+  outline: none;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.form-group input:focus {
+  border-color: #ff8a3d;
+  box-shadow: 0 4px 12px rgba(255, 138, 61, 0.2);
+  transform: scale(1.02);
+}
+
+.form-group.has-error input {
+  border-color: #ff4444;
+  background: #fff5f5;
+}
+
+/* ========================================
+   INPUT ICONS
+   ======================================== */
+.input-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ========================================
+   PASSWORD TOGGLE
+   ======================================== */
+.password-group {
+  position: relative;
+}
+
+.pass-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: transform 0.2s;
+  padding: 0.25rem;
+  user-select: none;
+}
+
+.pass-toggle:hover {
+  transform: translateY(-50%) scale(1.2);
+}
+
+.pass-toggle:active {
+  transform: translateY(-50%) scale(0.9);
+}
+
+/* ========================================
+   FILE UPLOAD
+   ======================================== */
+.file-group {
+  text-align: center;
+}
+
+.file-upload {
+  display: inline-block;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fff0e0 0%, #ffe7d1 100%);
+  border: 2px dashed #ffc99a;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  color: #ff874a;
+  text-align: center;
+  user-select: none;
+}
+
+.file-upload:hover {
+  background: linear-gradient(135deg, #ffe7d1 0%, #ffd8b5 100%);
+  border-color: #ff8a3d;
+  transform: scale(1.02);
+}
+
+.file-upload input {
+  display: none;
+}
+
+/* ========================================
+   AVATAR PREVIEW
+   ======================================== */
+.avatar-preview {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-preview img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ff8a3d;
+  box-shadow: 0 4px 12px rgba(255, 138, 61, 0.3);
+}
+
+.remove-avatar {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.remove-avatar:hover {
+  transform: scale(1.1);
+  background: #ff2222;
+}
+
+.remove-avatar:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   ERROR MESSAGES
+   ======================================== */
+.field-errors {
+  margin-top: 0.5rem;
+}
+
+.field-error-item {
+  color: #ff4444;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ========================================
+   SUBMIT BUTTON
+   ======================================== */
+.register-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(90deg, #ff8c42, #ffa45c);
+  color: white;
+  border: none;
+  border-radius: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 140, 66, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.register-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.register-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 140, 66, 0.5);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+}
+
+.register-btn:disabled {
+  background: linear-gradient(90deg, #ccc, #ddd);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.register-btn:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(200, 200, 200, 0.4);
+}
+
+.btn-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+}
+
+/* ========================================
+   TOAST MESSAGE
+   ======================================== */
+.toast {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  border: 2px solid #c3e6cb;
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+  border: 2px solid #f5c6cb;
+}
+
+/* ========================================
+   LOGIN LINK
+   ======================================== */
+.login-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #6b6b6b;
+  font-size: 0.9rem;
+}
+
+.login-link a {
+  color: #ff884d;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.login-link a:hover {
+  color: #ff6622;
+  text-decoration: underline;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 600px) {
+  .register-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .register-heading {
+    font-size: 1.6rem;
+  }
+
+  .register-sub {
+    font-size: 0.875rem;
+  }
+
+  .pet-deco {
+    font-size: 2.5rem;
+  }
+
+  .paws-bg .paw {
+    font-size: 2rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"] {
+    padding: 0.9rem 2.5rem 0.9rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .register-btn {
+    padding: 0.9rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .register-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .register-heading {
+    font-size: 1.4rem;
+  }
+
+  .pet-deco.dog {
+    top: -15px;
+    right: -15px;
+    font-size: 2rem;
+  }
+
+  .pet-deco.cat {
+    bottom: -15px;
+    left: -15px;
+    font-size: 2rem;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.form-group input:focus-visible,
+.file-upload:focus-visible,
+.register-btn:focus-visible,
+.pass-toggle:focus-visible,
+.remove-avatar:focus-visible {
+  outline: 3px solid #ff8a3d;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR (Optional)
+   ======================================== */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff6ec;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffc99a;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff8a3d;
+}

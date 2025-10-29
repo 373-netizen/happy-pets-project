@@ -1,10 +1,19 @@
-import { Link, useLocation } from 'react-router-dom'
-import { Heart, Home, BarChart3 } from 'lucide-react'
-import { motion } from 'framer-motion'
-import './Navbar.css'
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Heart, Home, BarChart3, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
+import { isLoggedIn, logout } from "../utils/auth"; // ✅ Import helper functions
+import "./Navbar.css";
 
 const Navbar = () => {
-  const location = useLocation()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const loggedIn = isLoggedIn();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/"); // Redirect to homepage
+    window.location.reload(); // Refresh to update navbar state
+  };
 
   return (
     <motion.nav
@@ -22,14 +31,14 @@ const Navbar = () => {
         <div className="nav-links">
           <Link
             to="/"
-            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+            className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
           >
             <Home size={20} />
             Home
           </Link>
           <Link
             to="/dashboard"
-            className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+            className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
           >
             <BarChart3 size={20} />
             Dashboard
@@ -37,12 +46,25 @@ const Navbar = () => {
         </div>
 
         <div className="nav-actions">
-          <button className="btn-secondary">Sign In</button>
-          <button className="btn-primary">Join Now</button>
+          {!loggedIn ? (
+            <>
+              <Link to="/login">
+                <button className="btn-secondary">Sign In</button>
+              </Link>
+              <Link to="/register">
+                <button className="btn-primary">Join Now</button>
+              </Link>
+            </>
+          ) : (
+            <button onClick={handleLogout} className="btn-secondary logout-btn">
+              <LogOut size={18} />
+              <span>Sign Out</span>
+            </button>
+          )}
         </div>
       </div>
     </motion.nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
