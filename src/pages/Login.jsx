@@ -1,25 +1,25 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { GoogleLogin } from "@react-oauth/google"; // ✅ import this
+import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import { MapPin } from "lucide-react";
+import { saveTokens, saveUser } from "../utils/auth"; // Import centralized helpers
 import "./login.css";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const toastTimeoutRef = useRef(null);
+  const navigate = useNavigate();
 
   const clearToast = () => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => {
       setMessage("");
       setError("");
@@ -32,6 +32,69 @@ const Login = () => {
     setError("");
   };
 
+  // GET USER LOCATION
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setShowLocationPrompt(false);
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      navigate(redirectTo || "/");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
+          const address = data.display_name || `${latitude}, ${longitude}`;
+
+          // Update user object in localStorage
+          const user = JSON.parse(localStorage.getItem("user"));
+          const updatedUser = { ...user, location: address, latitude, longitude };
+          saveUser(updatedUser);
+
+          const token = localStorage.getItem("access") || sessionStorage.getItem("access");
+          if (token) {
+            await axios.put(
+              `${import.meta.env.VITE_API_BASE_URL}/user/update-location/`,
+              { location: address, latitude, longitude },
+              { headers: { Authorization: `Bearer ${token}` } }
+            ).catch(err => console.error("Failed to save location:", err));
+          }
+
+          setMessage("📍 Location saved!");
+        } catch (err) {
+          console.error("Failed to get address:", err);
+        }
+        setShowLocationPrompt(false);
+        
+        // Check if there's a redirect parameter
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+        if (redirectTo) {
+          setTimeout(() => navigate(redirectTo), 1000);
+        } else {
+          setTimeout(() => navigate("/"), 1000);
+        }
+      },
+      (err) => {
+        console.error("Location error:", err);
+        setShowLocationPrompt(false);
+        
+        // Check if there's a redirect parameter
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else {
+          navigate("/");
+        }
+      }
+    );
+  };
+
+  // NORMAL LOGIN
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -41,44 +104,118 @@ const Login = () => {
       return;
     }
 
-    setError("");
-    setMessage("");
     setIsSubmitting(true);
-
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/login/", formData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      // 🔥 FIX: Backend expects "email", not "username"
+      const payload = {
+        email: formData.username,  // Changed from "username" to "email"
+        password: formData.password
+      };
 
-      if (res.status === 200) {
-        setMessage("🎉 Login successful!");
-        console.log("User token:", res.data);
+      console.log("🔍 Sending payload:", payload);
+      console.log("🔍 API URL:", `${import.meta.env.VITE_API_BASE_URL}/login/`);
 
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/login/`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("=== NORMAL LOGIN DEBUG ===", res.data);
+
+      // Save tokens using centralized helper
+      if (res.data.access && res.data.refresh) {
         if (rememberMe) {
-          localStorage.setItem("token", res.data.access);
-          localStorage.setItem("refreshToken", res.data.refresh);
+          localStorage.setItem("access", res.data.access);
+          localStorage.setItem("refresh", res.data.refresh);
         } else {
-          sessionStorage.setItem("token", res.data.access);
-          sessionStorage.setItem("refreshToken", res.data.refresh);
+          sessionStorage.setItem("access", res.data.access);
+          sessionStorage.setItem("refresh", res.data.refresh);
         }
+        saveTokens(res.data.access, res.data.refresh);
+      }
 
-        clearToast();
-        setTimeout(() => console.log("Redirect to dashboard"), 1500);
+      // Save user data using centralized helper
+      if (res.data.user) {
+        const userData = {
+          ...res.data.user,
+          avatar: res.data.user.avatar || "/default-avatar.png"
+        };
+        saveUser(userData);
+        console.log("Saved to localStorage:", userData);
+      }
+
+      setMessage("🎉 Login successful!");
+      clearToast();
+
+      // Check if redirected from a specific page
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      
+      if (!res.data.user?.location) {
+        setTimeout(() => setShowLocationPrompt(true), 800);
+      } else if (redirectTo) {
+        setTimeout(() => navigate(redirectTo), 800);
+      } else {
+        setTimeout(() => navigate("/"), 800);
       }
     } catch (err) {
-      console.error(err);
-      if (err.response?.data?.detail) {
-        setError(`❌ ${err.response.data.detail}`);
-      } else if (err.response?.status === 401) {
-        setError("❌ Invalid username or password");
-      } else {
-        setError("❌ Network error. Please check your connection.");
-      }
+      console.error("Login error:", err);
+      const errorMsg = err.response?.data?.message || "Invalid username or password";
+      setError(`❌ ${errorMsg}`);
       clearToast();
     } finally {
       setIsSubmitting(false);
     }
   };
+  //GOOGLE LOGIN
+const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const token = credentialResponse.credential; // This is the ID token
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/google-login/`,
+      { token }, // send as "token" field
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("=== GOOGLE LOGIN DEBUG ===", res.data);
+
+    if (res.data.access && res.data.refresh) {
+      saveTokens(res.data.access, res.data.refresh);
+    }
+
+    if (res.data.user) {
+      const userData = {
+        id: res.data.user.id,
+        username: res.data.user.username || res.data.user.name,
+        email: res.data.user.email,
+        avatar: res.data.user.avatar || res.data.user.picture || "public/default-avatar.png",
+        phone: res.data.user.phone || "",
+        location: res.data.user.location || ""
+      };
+      saveUser(userData);
+      console.log("Saved to localStorage:", userData);
+    }
+
+    setMessage("✅ Google Login Successful!");
+    clearToast();
+
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+    if (!res.data.user?.location) {
+      setTimeout(() => setShowLocationPrompt(true), 800);
+    } else if (redirectTo) {
+      setTimeout(() => navigate(redirectTo), 800);
+    } else {
+      setTimeout(() => navigate("/"), 800);
+    }
+  } catch (err) {
+    console.error("Google login failed:", err);
+    const errorMsg = err.response?.data?.message || "Google login failed";
+    setError(`❌ ${errorMsg}`);
+    clearToast();
+  }
+};
+
 
   return (
     <div className="login-bg">
@@ -87,18 +224,8 @@ const Login = () => {
           <motion.div
             key={i}
             className={`paw paw${i + 1}`}
-            initial={{ opacity: 0.1, y: 0 }}
-            animate={{
-              opacity: [0.1, 0.25, 0.1],
-              y: [0, -60, 0],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 2.5,
-            }}
+            animate={{ opacity: [0.1, 0.25, 0.1], y: [0, -60, 0], rotate: [0, 180, 360] }}
+            transition={{ duration: 15, repeat: Infinity, delay: i * 2.5 }}
           >
             🐾
           </motion.div>
@@ -107,149 +234,141 @@ const Login = () => {
 
       <motion.div
         className="login-container"
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h2 className="login-heading">Welcome Back! 🐕</h2>
-          <p className="login-sub">Sign in to continue your Happy Pets journey!</p>
-        </motion.div>
+        <h2 className="login-heading">Welcome Back! 🐕</h2>
 
-        {/* FORM */}
-        <form className="login-form" onSubmit={handleSubmit} noValidate>
-          <motion.div
-            className="form-group"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="input-wrapper">
-              <input
-                type="text"
-                name="username"
-                placeholder="Username or Email"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-              <span className="input-icon">👤</span>
-            </div>
-          </motion.div>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              name="username"
+              placeholder="Email"
+              value={formData.username}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+          </div>
 
-          <motion.div
-            className="form-group"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <div className="input-wrapper password-field">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-              <motion.button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "👁️" : "🙈"}
-              </motion.button>
-            </div>
-          </motion.div>
+          <div className="input-wrapper password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+            />
+            <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? "👁️" : "🙈"}
+            </button>
+          </div>
 
-          <motion.div
-            className="form-options"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
+          <div className="form-options">
             <label className="remember-me">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
-              <span className="checkbox-label">Remember me</span>
+              Remember me
             </label>
             <a href="/forgot-password" className="forgot-password">
               Forgot password?
             </a>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <motion.button type="submit" disabled={isSubmitting} className="login-btn">
-              {isSubmitting ? "Signing In..." : "Sign In 🚀"}
-            </motion.button>
-          </motion.div>
+          <button className="login-btn" disabled={isSubmitting}>
+            {isSubmitting ? "Signing In..." : "Sign In 🚀"}
+          </button>
         </form>
 
-        {/* Messages */}
         <AnimatePresence>
           {error && (
-            <motion.div className="toast error">{error}</motion.div>
+            <motion.div
+              className="toast error"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {error}
+            </motion.div>
           )}
           {message && (
-            <motion.div className="toast success">{message}</motion.div>
+            <motion.div
+              className="toast success"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {message}
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Divider */}
-        <motion.div className="divider">
+        <div className="divider">
           <span>or continue with</span>
-        </motion.div>
+        </div>
 
-        {/* ✅ Social Login */}
-        <motion.div
-          className="social-login"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <GoogleLogin
-            onSuccess={async (credentialResponse) => {
-              try {
-                const token = credentialResponse.credential;
-                const res = await axios.post(
-                  "http://127.0.0.1:8000/accounts/google/login/token/",
-                  { access_token: token },
-                  { headers: { "Content-Type": "application/json" } }
-                );
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => {
+            setError("❌ Google Login Failed");
+            clearToast();
+          }}
+        />
 
-                console.log("Backend response:", res.data);
-                setMessage("✅ Google login successful!");
-              } catch (err) {
-                console.error("Google login failed:", err);
-                setError("❌ Google login failed. Check backend console.");
-              }
-            }}
-            onError={() => setError("❌ Google Login Failed")}
-          />
-
-          <motion.button className="social-btn facebook">
-            📘 Facebook
-          </motion.button>
-        </motion.div>
-
-        {/* Register link */}
-        <motion.p className="register-link">
+        <p className="register-link">
           Don't have an account? <a href="/register">Sign up here</a>
-        </motion.p>
+        </p>
       </motion.div>
+
+      {/* Location Permission Modal */}
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            className="location-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="location-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+            >
+              <div className="location-icon">
+                <MapPin size={48} />
+              </div>
+              <h3>Enable Location</h3>
+              <p>
+                We'd like to access your location to show nearby pet spas, 
+                hospitals, and other services for your pets.
+              </p>
+              <div className="location-modal-actions">
+                <button 
+                  className="btn-secondary" 
+                  onClick={() => { 
+                    setShowLocationPrompt(false); 
+                    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+                    navigate(redirectTo || "/"); 
+                  }}
+                >
+                  Maybe Later
+                </button>
+                <button className="btn-primary" onClick={requestLocation}>
+                  Enable Location
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+};     
 
 export default Login;

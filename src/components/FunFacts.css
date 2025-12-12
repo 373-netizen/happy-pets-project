@@ -109,6 +109,19 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 2px;
 }
+.cancel-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+  color: #ff4d4d;
+  transition: 0.2s;
+}
+
+.cancel-btn:hover {
+  color: #cc0000;
+  transform: scale(1.1);
+}
 
 /* Mobile - Hide on small screens */
 @media (max-width: 1024px) {
